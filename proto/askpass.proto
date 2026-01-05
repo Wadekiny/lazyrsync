@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package askpass;
+
+service AskPass {
+  rpc RequestPassword (PasswordPrompt) returns (PasswordReply);
+}
+
+message PasswordPrompt {
+  string prompt = 1;
+  bool echo = 2;
+}
+
+message PasswordReply {
+  string password = 1;
+  bool cancelled = 2;
+}

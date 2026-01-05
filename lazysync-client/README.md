@@ -86,31 +86,43 @@ Cache文件 `cache.json` 的格式如下：
 }
 ```
 
-## Python使用示例
+## AsyncSSH 测试脚本
 
-参考 `example_python_client.py` 文件，包含以下功能：
+`asyncssh_tunnel_only.py` 用于验证 asyncssh 连接 + 端口转发 + rfb_client 是否可用，且不会被 rfb_client 的阻塞调用影响。
 
-1. `request_path(path)`: 发送路径请求
-2. `read_cache()`: 读取整个cache
-3. `get_path_entries(path)`: 获取指定路径的条目列表
+核心流程：
+- 主进程通过 IPC 与子进程通信
+- 子进程负责 asyncssh 连接与端口转发
+- 若需要密码，子进程通知主进程读取并回传
+- 主进程继续执行 rfb_client 调用
 
-**使用示例:**
-```python
-import example_python_client as client
-
-# 发送请求
-result = client.request_path("/home/user")
-print(result)
-
-# 读取cache
-cache = client.read_cache()
-print(cache)
-
-# 获取特定路径的条目
-entries = client.get_path_entries("/home/user")
-for entry in entries:
-    print(entry)
+**运行示例:**
+```bash
+LAZYSYNC_REMOTE_PATH=/home/ubuntu python asyncssh_tunnel_only.py
 ```
+
+可选环境变量：
+- `LAZYSYNC_SSH_PASSWORD`: SSH 密码（省略则动态提示）
+- `LAZYSYNC_SSH_KEY_PATH`: 指定密钥路径
+
+## OpenSSH + gRPC 测试脚本
+
+`openssh_grpc_client.py` 用于验证 OpenSSH 长连接 + 端口转发 + gRPC 调用 Rust server。
+
+依赖：
+- `grpcio`
+- `grpcio-tools`
+
+运行示例：
+```bash
+LAZYSYNC_REMOTE_PATH=/home/ubuntu python openssh_grpc_client.py
+```
+
+可选环境变量：
+- `LAZYSYNC_SSH_HOST`/`LAZYSYNC_SSH_PORT`/`LAZYSYNC_SSH_USER`
+- `LAZYSYNC_SSH_KEY_PATH`: 指定密钥路径
+- `LAZYSYNC_LOCAL_PORT`/`LAZYSYNC_REMOTE_PORT`: 端口转发配置
+- `LAZYSYNC_ASKPASS_ADDR`: askpass gRPC 服务监听地址
 
 ## 依赖
 
@@ -118,4 +130,3 @@ for entry in entries:
 - `tokio`: 异步运行时
 - `axum`: HTTP服务器框架
 - `tower` / `tower-http`: HTTP中间件
-

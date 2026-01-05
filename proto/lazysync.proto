@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package lazysync;
+
+service LazySync {
+  rpc Health (HealthRequest) returns (HealthResponse);
+  rpc GetPath (GetPathRequest) returns (GetPathResponse);
+  rpc Stat (StatRequest) returns (StatResponse);
+  rpc ReadFile (ReadFileRequest) returns (stream ReadFileChunk);
+  rpc WriteFile (stream WriteFileChunk) returns (WriteFileResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}
+
+message GetPathRequest {
+  string path = 1;
+}
+
+message StatRequest {
+  string path = 1;
+}
+
+message StatResponse {
+  bool exists = 1;
+  FileInfo info = 2;
+}
+
+message ReadFileRequest {
+  string path = 1;
+  uint64 offset = 2;
+  uint64 length = 3;
+}
+
+message ReadFileChunk {
+  bytes data = 1;
+  uint64 offset = 2;
+  bool eof = 3;
+}
+
+message WriteFileChunk {
+  string path = 1;
+  uint64 offset = 2;
+  bytes data = 3;
+  bool eof = 4;
+}
+
+message WriteFileResponse {
+  uint64 bytes_written = 1;
+}
+
+message FileInfo {
+  string name = 1;
+  string file_type = 2;
+  string permissions = 3;
+  string absolute_path = 4;
+  string modified = 5;
+  uint64 size = 6;
+}
+
+message DirEntries {
+  string absolute_path = 1;
+  repeated FileInfo entries = 2;
+}
+
+message GetPathResponse {
+  string path = 1;
+  repeated DirEntries entries = 2;
+}
